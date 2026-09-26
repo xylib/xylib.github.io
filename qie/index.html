@@ -10,7 +10,7 @@
   *{box-sizing:border-box}
   html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:ui-rounded,"Arial Rounded MT Bold","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#a9dcd1}
   button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  #app{position:relative;width:100vw;height:100dvh;min-height:450px;overflow:hidden;isolation:isolate;background:linear-gradient(#a8dfdf 0%,#e1efe1 67%,#a1ceb1 100%)}
+  #app{position:relative;width:100vw;height:100dvh;overflow:hidden;isolation:isolate;background:linear-gradient(#a8dfdf 0%,#e1efe1 67%,#a1ceb1 100%)}
   #landscape{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
   .topbar{position:absolute;z-index:8;left:clamp(14px,3vw,42px);right:clamp(14px,3vw,42px);top:clamp(12px,2.4vh,28px);display:flex;align-items:center;gap:12px;justify-content:space-between;pointer-events:none}
   .brand{display:flex;align-items:center;gap:10px;min-width:0;filter:drop-shadow(0 2px 0 #fff8)}
@@ -23,9 +23,14 @@
   .pill .icon{font-size:23px}.pill span.label{font-size:12px;color:#668584}.pill b{font-size:23px;font-variant-numeric:tabular-nums;line-height:1;color:#e47748}
   .mini{border:2px solid #fffdf3;background:#fffaf0ec;color:#427b7b;box-shadow:0 4px 0 #4b8b8a30;border-radius:16px;height:46px;min-width:46px;padding:0 12px;font-weight:900;font-size:20px}
   .mini:hover,.secondary:hover{transform:translateY(-2px)}.mini:active,.secondary:active{transform:translateY(2px);box-shadow:0 2px 0 #4b8b8a30}
-  #arena{position:absolute;left:clamp(14px,3vw,44px);right:clamp(14px,3vw,44px);top:clamp(80px,12vh,112px);bottom:clamp(109px,19vh,180px);min-height:290px;overflow:hidden;border:7px solid #f9f4da;border-radius:32px;background:radial-gradient(circle at 52% 30%,#f9f4dc99,#d0e9d5a0 60%,#a1c9b3a8);box-shadow:0 10px 0 #528d8677,0 25px 45px #25635b50,inset 0 0 0 3px #77a7a57d;touch-action:none}
-  #camera{position:absolute;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.86;filter:saturate(.95) contrast(1.02);display:none}
+  #arena{position:absolute;left:clamp(14px,3vw,44px);right:clamp(14px,3vw,44px);top:clamp(80px,12vh,112px);bottom:clamp(109px,19vh,180px);min-height:0;overflow:hidden;border:7px solid #f9f4da;border-radius:32px;background:radial-gradient(circle at 52% 30%,#f9f4dc99,#d0e9d5a0 60%,#a1c9b3a8);box-shadow:0 10px 0 #528d8677,0 25px 45px #25635b50,inset 0 0 0 3px #77a7a57d;touch-action:none}
+  #camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.86;filter:saturate(.95) contrast(1.02);display:none}
   #arena.has-camera #camera{display:block}
+  #loading{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(310px,85%);padding:20px 15px;border:3px solid #fff9e8;border-radius:24px;background:#fff9eadd;box-shadow:0 8px 30px #326b6655;text-align:center;color:#477d79;font-weight:900;line-height:1.5;display:none;pointer-events:none}
+  #arena.loading #loading{display:block}
+  #loading .spin{width:38px;height:38px;margin:0 auto 9px;border:5px solid #a8d9c5;border-top-color:#ef9554;border-radius:50%;animation:spin .9s linear infinite}
+  #loading small{display:block;color:#7b9991;font-size:11px;margin-top:4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
   #arena:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#cce6d5a1,transparent 18%,transparent 82%,#cce6d5a1),linear-gradient(0deg,#d4e9da7b,transparent 14%,transparent 84%,#f8efcc45)}
   #fx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
   #cargo{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}
@@ -66,8 +71,9 @@
   #toast{position:absolute;z-index:30;top:77px;left:50%;transform:translateX(-50%) translateY(-8px);border:2px solid #fff;border-radius:15px;padding:8px 17px;background:#317e7ce8;color:white;box-shadow:0 8px 18px #34575555;font-weight:900;font-size:13px;opacity:0;pointer-events:none;transition:.24s;max-width:80vw;text-align:center}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   input[type=file]{display:none}
-  @media(max-width:660px){.brand small{display:none}.brand-mark{width:39px;height:39px}.brand strong{font-size:17px}.pill{min-height:40px;padding:4px 8px}.pill .icon{font-size:18px}.pill span.label{display:none}.pill b{font-size:18px}.mini{height:40px;min-width:40px;padding:0 7px;font-size:17px}.topbar{gap:4px}.hud{gap:5px}.welcome{grid-template-columns:1fr;overflow:auto}.poster{display:none}.welcome .copy{padding:25px}.instruction{font-size:12px;max-width:75%}.instruction small{display:none}.status{font-size:11px;max-width:40%}#arena{border-width:5px;border-radius:22px}.train{right:1%}}
+  @media(max-width:660px){.brand small{display:none}.brand-mark{width:39px;height:39px}.brand strong{font-size:17px}.pill{min-height:44px;padding:4px 9px}.pill .icon{font-size:18px}.pill span.label{display:none}.pill b{font-size:18px}.mini{height:44px;min-width:44px;padding:0 7px;font-size:17px}.topbar{top:calc(env(safe-area-inset-top) + 8px);display:grid;grid-template-columns:1fr;gap:9px;left:12px;right:12px}.hud{gap:5px;justify-content:space-between;width:100%}.welcome{grid-template-columns:1fr;overflow:auto}.poster{display:none}.welcome .copy{padding:25px}.instruction{font-size:12px;max-width:58%}.instruction small{display:none}.status{font-size:11px;max-width:40%}#arena{top:calc(env(safe-area-inset-top) + 112px);bottom:calc(env(safe-area-inset-bottom) + 115px);border-width:5px;border-radius:22px}#arena .corner{font-size:10px;padding:5px 7px}.belt{bottom:calc(env(safe-area-inset-bottom) + 48px);height:72px}.bottomline{bottom:calc(env(safe-area-inset-bottom) + 7px);left:12px;right:12px}.train{right:1%;bottom:calc(env(safe-area-inset-bottom) + 3px)}}
   @media(max-height:600px){#arena{top:68px;bottom:80px}.belt{bottom:26px;height:55px}.bottomline{bottom:4px}.instruction{padding:4px 10px}.status{padding:4px 9px}.topbar{top:8px}.welcome .copy{padding:20px}h1{font-size:36px}.intro{margin-bottom:10px}.steps{margin-bottom:10px}.privacy{margin-top:9px}}
+  @media(max-width:660px) and (max-height:600px){#arena{top:calc(env(safe-area-inset-top) + 104px);bottom:calc(env(safe-area-inset-bottom) + 82px)}.topbar{top:calc(env(safe-area-inset-top) + 5px)}.belt{bottom:calc(env(safe-area-inset-bottom) + 25px);height:54px}.bottomline{bottom:calc(env(safe-area-inset-bottom) + 3px)}}
 </style>
 </head>
 <body>
@@ -91,7 +97,7 @@
     <div class="brand"><div class="brand-mark"><svg viewBox="0 0 48 48"><path d="M8 24c3-9 11-15 19-13 11 2 15 14 11 23-5 10-16 9-22 5C9 35 6 30 8 24Z" fill="#e86750" stroke="#ba4e39" stroke-width="2"/><path d="M23 13c2-7 6-9 9-9" fill="none" stroke="#5d914f" stroke-width="4" stroke-linecap="round"/><path d="M24 14c-5-7-11-6-14-2 5 4 9 5 14 2Z" fill="#72b36a"/><circle cx="18" cy="26" r="2" fill="#fff"/><circle cx="30" cy="26" r="2" fill="#fff"/><path d="M20 32q4 4 8 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div><div><strong>元宝切切切工厂</strong><small>YUANBAO · HAPPY FACTORY</small></div></div>
     <div class="hud"><div class="pill" aria-label="切开的蔬果数量"><span class="icon">🥕</span><span class="label">已经切开</span><b id="score">0</b></div><button class="mini" id="musicBtn" title="音乐开关" aria-label="音乐开关">♫</button><button class="mini" id="pickBtn" title="导入自己的音乐" aria-label="导入自己的音乐">♫+</button><button class="mini" id="soundBtn" title="音效开关" aria-label="音效开关">🔊</button><button class="mini" id="fullBtn" title="全屏" aria-label="全屏">⛶</button></div>
   </header>
-  <main id="arena" aria-label="蔬果切切切游戏区"><video id="camera" autoplay muted playsinline></video><canvas id="fx"></canvas><div class="corner">🍎 蔬果加工区</div><div class="corner right">✦ 手指划过才切开 ✦</div><div id="cameraHint">准备出发！</div><div id="burstWord">切切切！</div></main>
+  <main id="arena" aria-label="蔬果切切切游戏区"><video id="camera" autoplay muted playsinline></video><canvas id="fx"></canvas><div class="corner">🍎 蔬果加工区</div><div class="corner right">✦ 手指划过才切开 ✦</div><div id="cameraHint">准备出发！</div><div id="burstWord">切切切！</div><div id="loading" role="status"><div class="spin"></div>正在准备手势识别…<small>准备好之后蔬果才会出现</small></div></main>
   <div class="belt"><div class="rail"></div><div class="dark"></div><div class="rollers"></div><div class="base"></div></div>
   <canvas id="cargo" aria-hidden="true"></canvas>
   <svg class="train" viewBox="0 0 300 155" aria-hidden="true"><ellipse cx="153" cy="140" rx="138" ry="9" fill="#315d5e" opacity=".4"/><path d="M15 94h65l14 25H15Z" fill="#eec987" stroke="#496f68" stroke-width="7"/><path d="M18 87h62M21 72h57" stroke="#ac7560" stroke-width="10"/><path d="M86 71h66V32h78v61h35l18 27H79Z" fill="#6caea7" stroke="#396f70" stroke-width="8" stroke-linejoin="round"/><path d="M157 44h58v30h-58Z" fill="#d7f0df" stroke="#396f70" stroke-width="7"/><path d="M103 77h40V20h21v57" fill="#e2ac72" stroke="#396f70" stroke-width="7"/><path d="M101 94h165" stroke="#ffe5ad" stroke-width="11"/><path d="M92 115h193" stroke="#d58b66" stroke-width="12"/><circle cx="106" cy="126" r="22" fill="#426a68" stroke="#f8dda3" stroke-width="8"/><circle cx="214" cy="126" r="22" fill="#426a68" stroke="#f8dda3" stroke-width="8"/><circle cx="264" cy="125" r="15" fill="#426a68" stroke="#f8dda3" stroke-width="7"/><circle cx="270" cy="88" r="10" fill="#fff2c2"/><path d="M168 18q-12-11-1-22m18 16q-12-14-1-25" fill="none" stroke="#fff8dc" stroke-width="8" stroke-linecap="round" opacity=".8"/></svg>
@@ -103,16 +109,29 @@
 </div>
 <script>
 (()=>{'use strict';
-  // Single-file game: no imported scripts, images, sound files, or network requests.
+  // A single HTML file; the camera mode downloads MediaPipe hand recognition on demand.
   const $=s=>document.querySelector(s), app=$('#app'), arena=$('#arena'), belt=$('.belt'), video=$('#camera'), canvas=$('#fx'), ctx=canvas.getContext('2d'), cargoCanvas=$('#cargo'), cargoCtx=cargoCanvas.getContext('2d');
   const scoreEl=$('#score'), statusEl=$('#status'), hintEl=$('#cameraHint'), wordEl=$('#burstWord'), overlay=$('#overlay');
   const CONF={maxFruit:18,spawnEvery:640,handFrameMs:70,minSwipePx:9,maxSwipePx:340};
   const types=['apple','carrot','tomato','watermelon','eggplant','broccoli','orange','pumpkin','strawberry','pepper'];
   const colors={apple:['#e76d56','#ffde9c'],carrot:['#f3964e','#ffe6ac'],tomato:['#e95d50','#ffcf9c'],watermelon:['#68ad76','#ec7990'],eggplant:['#8867ae','#d7a3d6'],broccoli:['#70b275','#d4e6ad'],orange:['#eeac55','#ffe5a3'],pumpkin:['#e99654','#ffe0a4'],strawberry:['#e96968','#ffccad'],pepper:['#e7b950','#fff0aa']};
-  let w=0,h=0,appW=0,appH=0,dpr=1,running=false,hasCamera=false,score=0,combo=0,comboAt=0,fruit=[],cargo=[],bits=[],texts=[],rings=[],lastFrame=0,lastSpawn=0,stream=null,hands=null,handsTimer=null,handsBusy=false,trackedHands=[],fingerTips=[],trails=[],pointerTracks=new Map();
+  let w=0,h=0,appW=0,appH=0,dpr=1,running=false,gameReady=false,hasCamera=false,score=0,combo=0,comboAt=0,fruit=[],cargo=[],bits=[],texts=[],rings=[],lastFrame=0,lastSpawn=0,stream=null,hands=null,handsTimer=null,handsBusy=false,trackedHands=[],fingerTips=[],trails=[],pointerTracks=new Map();
   let audioCtx=null,musicOn=true,soundOn=true,musicTimer=null,musicStep=0,customTracks=[],trackIndex=0,currentAudio=null,toTimer=0;
   const rand=(a,b)=>a+Math.random()*(b-a),clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
-  function resize(){let r=arena.getBoundingClientRect(),a=app.getBoundingClientRect();w=r.width;h=r.height;appW=a.width;appH=a.height;dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);cargoCanvas.width=Math.round(appW*dpr);cargoCanvas.height=Math.round(appH*dpr);cargoCtx.setTransform(dpr,0,0,dpr,0,0)}
+  function resize(){
+    const oldW=w,oldH=h,oldAppW=appW,oldAppH=appH;
+    let r=arena.getBoundingClientRect(),a=app.getBoundingClientRect();
+    w=r.width;h=r.height;appW=a.width;appH=a.height;dpr=Math.min(devicePixelRatio||1,2);
+    if(oldW&&oldH&&(oldW!==w||oldH!==h)){
+      for(const f of fruit){f.x=clamp(f.x*w/oldW,f.size*.48,w-f.size*.48);f.y=clamp(f.y*h/oldH,f.size*.48,h-f.size*.48)}
+      for(const p of cargo){p.x*=appW/oldAppW;p.y*=appH/oldAppH}
+      bits=[];texts=[];rings=[];trails=[];trackedHands=[];fingerTips=[];
+    }
+    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+    canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+    cargoCanvas.width=Math.round(appW*dpr);cargoCanvas.height=Math.round(appH*dpr);
+    cargoCtx.setTransform(dpr,0,0,dpr,0,0);
+  }
   addEventListener('resize',resize);resize();
   function toast(s){const t=$('#toast');t.textContent=s;t.classList.add('show');clearTimeout(toTimer);toTimer=setTimeout(()=>t.classList.remove('show'),3500)}
   function state(s){statusEl.textContent=s}
@@ -149,7 +168,8 @@
     if(type!=='broccoli'&&type!=='carrot'){p.fillStyle='#493e3f';p.beginPath();p.arc(-14,14,3,0,7);p.arc(14,14,3,0,7);p.fill();p.strokeStyle='#493e3f';p.lineWidth=2;p.beginPath();p.arc(0,18,5,0,Math.PI);p.stroke()}
     return c}
   const sprites=Object.fromEntries(types.map(t=>[t,makeSprite(t)]));
-  function spawn(){if(fruit.length>=CONF.maxFruit)return;let t=types[Math.floor(Math.random()*types.length)],size=2*clamp(Math.min(w,h)*rand(.115,.16),60,110),x=rand(size*.48,w-size*.48),y=rand(size*.48,h-size*.48);fruit.push({t,x,y,size,vx:rand(-14,14),vy:rand(-19,8),rot:rand(-.25,.25),vr:rand(-.28,.28),age:0,bob:rand(0,7),cut:false})}
+  function spawn(){if(fruit.length>=(w<520?8:CONF.maxFruit))return;let t=types[Math.floor(Math.random()*types.length)],size=2*clamp(Math.min(w,h)*rand(.115,.16),60,110),x=rand(size*.48,w-size*.48),y=rand(size*.48,h-size*.48);fruit.push({t,x,y,size,vx:rand(-14,14),vy:rand(-19,8),rot:rand(-.25,.25),vr:rand(-.28,.28),age:0,bob:rand(0,7),cut:false})}
+  function preparePlay(){if(gameReady)return;gameReady=true;arena.classList.remove('loading');for(let i=0;i<(w<520?5:9);i++)spawn();lastSpawn=performance.now()}
   function particles(x,y,t,n=15){let cs=colors[t];for(let i=0;i<n;i++){let a=rand(0,7),s=rand(75,260);bits.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-90,life:rand(.35,.75),max:.75,r:rand(3,8),c:i%3===0?'#fff4be':cs[i%2],shape:i%5===0})}if(bits.length>400)bits.splice(0,bits.length-400)}
   function createCargo(f){
     const ar=arena.getBoundingClientRect(),root=app.getBoundingClientRect();
@@ -165,7 +185,7 @@
     return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
   }
   function cutSegment(a,b){
-    if(!running||!a||!b)return 0;
+    if(!running||!gameReady||!a||!b)return 0;
     const travel=Math.hypot(b.x-a.x,b.y-a.y);
     if(travel<CONF.minSwipePx||travel>CONF.maxSwipePx)return 0;
     trails.push({ax:a.x,ay:a.y,bx:b.x,by:b.y,life:.24});
@@ -219,8 +239,8 @@
       drawCargoPiece(p,beltY);
     }
   }
-  function render(now){requestAnimationFrame(render);let dt=Math.min((now-lastFrame)/1000||.016,.05);lastFrame=now;ctx.clearRect(0,0,w,h);cargoCtx.clearRect(0,0,appW,appH);if(!running)return;
-    if(now-lastSpawn>CONF.spawnEvery){lastSpawn=now;spawn();if(fruit.length<5)spawn()}
+  function render(now){requestAnimationFrame(render);let dt=Math.min((now-lastFrame)/1000||.016,.05);lastFrame=now;ctx.clearRect(0,0,w,h);cargoCtx.clearRect(0,0,appW,appH);if(!running||!gameReady)return;
+    if(now-lastSpawn>(w<520?900:CONF.spawnEvery)){lastSpawn=now;spawn();if(fruit.length<(w<520?3:5))spawn()}
     for(let i=fruit.length-1;i>=0;i--){let f=fruit[i];f.age+=dt;if(f.cut){fruit.splice(i,1)}else{f.x+=f.vx*dt;f.y+=f.vy*dt;f.rot+=f.vr*dt;if(f.x<f.size*.45||f.x>w-f.size*.45)f.vx*=-1;if(f.y<f.size*.45||f.y>h-f.size*.45)f.vy*=-1;drawSprite(f)}}
     for(let i=bits.length-1;i>=0;i--){let p=bits[i];p.life-=dt;if(p.life<=0){bits.splice(i,1);continue}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=430*dt;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.c;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.vx*.004);if(p.shape)ctx.fillRect(-p.r/2,-p.r/2,p.r*1.7,p.r*.65);else{ctx.beginPath();ctx.arc(0,0,p.r,0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
     for(let i=rings.length-1;i>=0;i--){let p=rings[i];p.age+=dt;ctx.globalAlpha=(1-p.age/.43)*.65;ctx.strokeStyle='#fff0b4';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.35+p.age*1.8),0,7);ctx.stroke();if(p.age>.43)rings.splice(i,1)}ctx.globalAlpha=1;
@@ -273,7 +293,7 @@
   function stopCamera(){
     clearInterval(handsTimer);handsTimer=null;hasCamera=false;trackedHands=[];fingerTips=[];
     stream?.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;
-    arena.classList.remove('has-camera');
+    arena.classList.remove('has-camera','loading');
   }
   async function sendHandFrame(){
     if(!running||!hasCamera||handsBusy||!video.videoWidth)return;
@@ -292,7 +312,8 @@
   async function cameraStart(){
     try{
       if(!navigator.mediaDevices?.getUserMedia)throw new Error('当前浏览器未开放摄像头');
-      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}},audio:false});
+      const portrait=appW<660&&appH>appW;
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:portrait?480:640},height:{ideal:portrait?640:480},frameRate:{ideal:24,max:30}},audio:false});
       video.srcObject=stream;await video.play();hasCamera=true;arena.classList.add('has-camera');
       state('摄像头已开启 · 正在加载手指识别…');hintEl.textContent='正在准备手指识别…';
       await loadHandScript();
@@ -300,20 +321,25 @@
       hands.setOptions({maxNumHands:6,modelComplexity:0,minDetectionConfidence:.55,minTrackingConfidence:.55});
       hands.onResults(onHandsResults);
       if(hands.initialize)await hands.initialize();
+      // The first inference also loads any remaining model assets. Keep the playfield empty until it succeeds.
+      await hands.send({image:video});
+      preparePlay();
       handsTimer=setInterval(sendHandFrame,CONF.handFrameMs);
       state('手指识别已开启 · 划过蔬果！');hintEl.textContent='把手伸进画面，用手指划过蔬果';
       toast('手指识别准备好了，划过蔬果才会切开！');
     }catch(e){
       console.error(e);stopCamera();state('鼠标 / 手指模式');
+      preparePlay();
       hintEl.textContent='用鼠标或手指划过蔬果';
       toast(e?.name==='NotAllowedError'?'摄像头未获许可，已切换为鼠标玩法':'手指识别不可用，已切换为鼠标玩法');
     }
   }
   async function start(withCamera){
     if(running)return;running=true;overlay.classList.add('hidden');startAudio();
-    for(let i=0;i<9;i++)spawn();lastSpawn=performance.now();manageMusic();state('开工啦！');
+    manageMusic();state('开工啦！');
     hintEl.textContent='用手指划过蔬果！';
-    if(withCamera)await cameraStart();else{state('鼠标 / 手指模式');hintEl.textContent='按住鼠标或手指划过蔬果'}
+    if(withCamera){arena.classList.add('loading');await cameraStart()}
+    else{preparePlay();state('鼠标 / 手指模式');hintEl.textContent='按住鼠标或手指划过蔬果'}
   }
   $('#startBtn').onclick=()=>start(true);$('#pointerBtn').onclick=()=>start(false);
   addEventListener('pagehide',()=>{stopCamera();hands?.close?.();if(currentAudio)currentAudio.pause()});
