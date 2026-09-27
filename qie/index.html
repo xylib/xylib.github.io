@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#9bdedb">
+<title>元宝的切切切工厂</title>
+<style>
+  :root{--ink:#254b50;--cream:#fff9e8;--orange:#f58b51;--deep:#d96a3a;--teal:#4a9fa5;--mint:#a2d7c6}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:ui-rounded,"Arial Rounded MT Bold","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);background:#a9dcd1}
+  button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #app{position:relative;width:100vw;height:100dvh;overflow:hidden;isolation:isolate;background:linear-gradient(#a8dfdf 0%,#e1efe1 67%,#a1ceb1 100%)}
+  #landscape{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+  .topbar{position:absolute;z-index:8;left:clamp(14px,3vw,42px);right:clamp(14px,3vw,42px);top:clamp(12px,2.4vh,28px);display:flex;align-items:center;gap:12px;justify-content:space-between;pointer-events:none}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0;filter:drop-shadow(0 2px 0 #fff8)}
+  .brand-mark{width:48px;height:48px;border-radius:17px;background:#ffcb74;display:grid;place-items:center;border:3px solid #fff7e2;box-shadow:0 4px 0 #b6774e;transform:rotate(-5deg)}
+  .brand-mark svg{width:35px;height:35px}
+  .brand strong{font-size:clamp(19px,2.4vw,30px);letter-spacing:.035em;white-space:nowrap;color:#25565b;text-shadow:0 2px #fff9}
+  .brand small{display:block;font-size:12px;color:#477474;font-weight:800;letter-spacing:.16em;margin-top:1px}
+  .hud{display:flex;align-items:center;gap:9px;pointer-events:auto}
+  .pill{background:#fffaf0eb;border:2px solid #ffffff;box-shadow:0 5px 0 #4b8b8a30,0 8px 20px #406d6230;border-radius:19px;min-height:46px;padding:5px 14px;display:flex;align-items:center;gap:9px;white-space:nowrap;font-weight:900}
+  .pill .icon{font-size:23px}.pill span.label{font-size:12px;color:#668584}.pill b{font-size:23px;font-variant-numeric:tabular-nums;line-height:1;color:#e47748}
+  .mini{border:2px solid #fffdf3;background:#fffaf0ec;color:#427b7b;box-shadow:0 4px 0 #4b8b8a30;border-radius:16px;height:46px;min-width:46px;padding:0 12px;font-weight:900;font-size:20px}
+  .mini:hover,.secondary:hover{transform:translateY(-2px)}.mini:active,.secondary:active{transform:translateY(2px);box-shadow:0 2px 0 #4b8b8a30}
+  #arena{position:absolute;left:clamp(14px,3vw,44px);right:clamp(14px,3vw,44px);top:clamp(80px,12vh,112px);bottom:clamp(109px,19vh,180px);min-height:0;overflow:hidden;border:7px solid #f9f4da;border-radius:32px;background:radial-gradient(circle at 52% 30%,#f9f4dc99,#d0e9d5a0 60%,#a1c9b3a8);box-shadow:0 10px 0 #528d8677,0 25px 45px #25635b50,inset 0 0 0 3px #77a7a57d;touch-action:none}
+  #camera{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:.86;filter:saturate(.95) contrast(1.02);display:none}
+  #arena.has-camera #camera{display:block}
+  #loading{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(310px,85%);padding:20px 15px;border:3px solid #fff9e8;border-radius:24px;background:#fff9eadd;box-shadow:0 8px 30px #326b6655;text-align:center;color:#477d79;font-weight:900;line-height:1.5;display:none;pointer-events:none}
+  #arena.loading #loading{display:block}
+  #loading .spin{width:38px;height:38px;margin:0 auto 9px;border:5px solid #a8d9c5;border-top-color:#ef9554;border-radius:50%;animation:spin .9s linear infinite}
+  #loading small{display:block;color:#7b9991;font-size:11px;margin-top:4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #arena:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#cce6d5a1,transparent 18%,transparent 82%,#cce6d5a1),linear-gradient(0deg,#d4e9da7b,transparent 14%,transparent 84%,#f8efcc45)}
+  #fx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+  #cargo{position:absolute;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}
+  #arena .corner{position:absolute;z-index:3;font-size:13px;letter-spacing:.08em;font-weight:900;color:#fff;background:#337d7cae;border:2px solid #d0f5e8ad;padding:7px 12px;border-radius:0 0 15px 0;text-shadow:0 1px #3a6664}
+  #arena .corner.right{left:auto;right:0;border-radius:0 0 0 15px}
+  #cameraHint{position:absolute;z-index:3;bottom:13px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#fff8e8e9;color:#4a7978;border:1px solid #fff;border-radius:99px;padding:6px 15px;font-size:12px;font-weight:900;box-shadow:0 3px 12px #2b65572a;pointer-events:none;transition:opacity .4s}
+  #burstWord{position:absolute;z-index:4;left:50%;top:46%;transform:translate(-50%,-50%) scale(.6) rotate(-5deg);opacity:0;color:#fff8df;font-weight:1000;font-size:clamp(40px,8vw,95px);letter-spacing:.09em;white-space:nowrap;pointer-events:none;text-shadow:5px 6px 0 #e77e4e,-3px -3px 0 #f6b65a,0 12px 25px #b54d3566}
+  #burstWord.pop{animation:word .65s cubic-bezier(.16,.8,.3,1) both}
+  @keyframes word{0%{opacity:0;transform:translate(-50%,-42%) scale(.5) rotate(-11deg)}23%{opacity:1;transform:translate(-50%,-60%) scale(1.12) rotate(4deg)}60%{opacity:1;transform:translate(-50%,-68%) scale(1) rotate(-2deg)}100%{opacity:0;transform:translate(-50%,-82%) scale(.95) rotate(-2deg)}}
+  .belt{position:absolute;left:-3%;right:-3%;bottom:clamp(43px,8.3vh,82px);height:clamp(56px,10vh,92px);z-index:5;pointer-events:none;filter:drop-shadow(0 12px 10px #42685255)}
+  .belt .rail{height:38%;border-radius:28px;background:repeating-linear-gradient(90deg,#d5aa70 0 56px,#aa794d 56px 62px);border:5px solid #577d78;box-shadow:inset 0 5px #f6d6a8,0 5px #345c5b}
+  .belt .dark{position:absolute;top:33%;left:0;right:0;height:35%;background:#457b78;border-top:5px solid #83b1a2;border-bottom:5px solid #2e5e60}
+  .belt .rollers{position:absolute;top:41%;left:0;right:0;height:21%;background:repeating-linear-gradient(90deg,transparent 0 47px,#9ac1aa 48px 56px,transparent 57px 80px);animation:rolling 3s linear infinite}
+  @keyframes rolling{to{background-position:80px 0}}
+  .belt .base{position:absolute;top:68%;height:15%;left:0;right:0;border-radius:14px;background:#f0bc78;border:4px solid #7a8b78}
+  .wagon-meter{position:absolute;left:3%;top:-38px;border:2px solid #fff9dc;border-radius:15px;background:#fff9e9ed;color:#477e75;box-shadow:0 4px 0 #497d7640;padding:5px 12px;font-size:13px;font-weight:1000;white-space:nowrap}
+  #convoy{position:absolute;left:0;bottom:11px;width:clamp(650px,70vw,970px);z-index:9;visibility:hidden;pointer-events:none;filter:drop-shadow(0 10px 5px #31545160);will-change:transform}
+  #convoy svg{display:block;width:100%;height:auto}
+  .bottomline{position:absolute;z-index:8;bottom:clamp(11px,2vh,20px);left:clamp(16px,3vw,42px);right:clamp(16px,3vw,42px);display:flex;align-items:end;justify-content:space-between;gap:16px}
+  .instruction{border:2px solid #ffffffb8;border-radius:18px;background:#fffaf0de;padding:8px 16px;font-size:clamp(13px,1.4vw,17px);font-weight:900;box-shadow:0 4px 0 #5c8e8036;max-width:70%;line-height:1.3}
+  .instruction small{display:block;color:#668986;font-size:11px;font-weight:800;margin-top:3px}
+  .status{border-radius:20px;background:#367d79dd;color:#fff9e9;border:2px solid #b8ded0;box-shadow:0 4px #29686255;padding:9px 13px;font-weight:900;font-size:12px;text-align:right;max-width:35%}
+  #overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;background:#205d61a8;backdrop-filter:blur(7px);padding:18px}
+  #overlay.hidden{display:none}
+  .welcome{width:min(850px,96vw);display:grid;grid-template-columns:1.12fr .88fr;border:7px solid #fff8de;border-radius:34px;overflow:hidden;background:#fffbef;box-shadow:0 18px 0 #2a636c7a,0 35px 80px #174e6080;max-height:min(660px,94dvh)}
+  .welcome .copy{padding:clamp(24px,3.4vw,45px);display:flex;flex-direction:column;justify-content:center}
+  .eyebrow{font-weight:1000;letter-spacing:.14em;color:#e77748;font-size:14px}
+  h1{margin:10px 0 12px;font-size:clamp(38px,5vw,65px);line-height:1.08;color:#265b5c;letter-spacing:-.03em}
+  h1 em{font-style:normal;color:#ee8753}
+  .intro{font-size:clamp(15px,1.55vw,19px);line-height:1.6;font-weight:800;color:#477b79;margin:0 0 18px}
+  .steps{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}.steps span{padding:6px 9px;border-radius:11px;background:#e8f4e4;color:#52837e;font-size:12px;font-weight:900}
+  .primary{border:0;border-radius:18px;background:#f58c54;color:white;min-height:57px;padding:8px 23px;font-size:21px;font-weight:1000;box-shadow:0 7px 0 #c66036,0 12px 15px #c6603630;text-shadow:0 2px #b85b34;width:100%}
+  .primary:hover{transform:translateY(-2px)}.primary:active{transform:translateY(4px);box-shadow:0 3px 0 #c66036}
+  .secondary{border:2px solid #c9e6d5;border-radius:14px;background:#f6fbef;color:#4d8581;box-shadow:0 4px #7ea5984c;min-height:40px;padding:5px 16px;font-size:14px;font-weight:900;margin-top:13px;width:100%}
+  .privacy{font-size:11px;line-height:1.5;color:#829995;margin-top:18px;font-weight:700}
+  .poster{position:relative;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 55% 30%,#fff2bd,#f8cf84 65%,#e8a96c);border-left:5px solid #f4e6c2}
+  .poster:before{content:"";position:absolute;width:360px;height:360px;border:4px dashed #fff5d7;opacity:.75;border-radius:50%;top:-120px;left:-70px}
+  .poster svg{position:relative;width:92%;height:auto;max-height:90%;filter:drop-shadow(0 12px 3px #ba78443c)}
+  #toast{position:absolute;z-index:30;top:77px;left:50%;transform:translateX(-50%) translateY(-8px);border:2px solid #fff;border-radius:15px;padding:8px 17px;background:#317e7ce8;color:white;box-shadow:0 8px 18px #34575555;font-weight:900;font-size:13px;opacity:0;pointer-events:none;transition:.24s;max-width:80vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  input[type=file]{display:none}
+  @media(max-width:660px){.brand small{display:none}.brand-mark{width:39px;height:39px}.brand strong{font-size:17px}.pill{min-height:44px;padding:4px 9px}.pill .icon{font-size:18px}.pill span.label{display:none}.pill b{font-size:18px}.mini{height:44px;min-width:44px;padding:0 7px;font-size:17px}.topbar{top:calc(env(safe-area-inset-top) + 8px);display:grid;grid-template-columns:1fr;gap:9px;left:12px;right:12px}.hud{gap:5px;justify-content:space-between;width:100%}.welcome{grid-template-columns:1fr;overflow:auto}.poster{display:none}.welcome .copy{padding:25px}.instruction{font-size:12px;max-width:58%}.instruction small{display:none}.status{font-size:11px;max-width:40%}#arena{top:calc(env(safe-area-inset-top) + 112px);bottom:calc(env(safe-area-inset-bottom) + 115px);border-width:5px;border-radius:22px}#arena .corner{font-size:10px;padding:5px 7px}.belt{bottom:calc(env(safe-area-inset-bottom) + 48px);height:72px}.bottomline{bottom:calc(env(safe-area-inset-bottom) + 7px);left:12px;right:12px}#convoy{bottom:calc(env(safe-area-inset-bottom) + 7px)}.wagon-meter{font-size:11px;top:-32px;padding:4px 8px}}
+  @media(max-height:600px){#arena{top:68px;bottom:80px}.belt{bottom:26px;height:55px}.bottomline{bottom:4px}.instruction{padding:4px 10px}.status{padding:4px 9px}.topbar{top:8px}.welcome .copy{padding:20px}h1{font-size:36px}.intro{margin-bottom:10px}.steps{margin-bottom:10px}.privacy{margin-top:9px}}
+  @media(max-width:660px) and (max-height:600px){#arena{top:calc(env(safe-area-inset-top) + 104px);bottom:calc(env(safe-area-inset-bottom) + 82px)}.topbar{top:calc(env(safe-area-inset-top) + 5px)}.belt{bottom:calc(env(safe-area-inset-bottom) + 25px);height:54px}.bottomline{bottom:calc(env(safe-area-inset-bottom) + 3px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <svg id="landscape" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#8ed6d9"/><stop offset=".65" stop-color="#e4f2df"/><stop offset="1" stop-color="#98cda7"/></linearGradient><pattern id="brick" width="46" height="26" patternUnits="userSpaceOnUse"><path d="M0 0H46M0 13H46M23 0V13M0 13V26" fill="none" stroke="#d8d5b8" stroke-width="2" opacity=".45"/></pattern></defs>
+    <path fill="url(#sky)" d="M0 0h1440v900H0z"/><circle cx="1105" cy="115" r="69" fill="#fff2bd" opacity=".85"/>
+    <g fill="#fffdf1" opacity=".72"><path d="M140 130c-38-54-93-14-96 16-47-3-62 45-17 55h226c58-8 33-64-14-59-13-36-61-47-99-12Z"/><path d="M1045 231c-36-30-67-8-70 13-48-5-53 34-20 43h193c40-8 31-43-10-44-16-34-55-35-93-12Z"/><path d="M686 76c-32-27-63-7-67 15-38-3-48 29-15 37h183c40-6 24-40-11-40-24-29-53-31-90-12Z"/></g>
+    <path d="M0 614Q175 525 360 592T734 573T1080 577T1440 545V900H0Z" fill="#b7d6ad"/><path d="M0 658Q197 583 396 647T800 637T1200 635T1440 612V900H0Z" fill="#91c3a3"/>
+    <g opacity=".93" stroke-linejoin="round">
+      <g transform="translate(54 240)"><path d="M63 465 113 143h81l50 322" fill="#a7c5ba" stroke="#6c9b96" stroke-width="9"/><path d="M113 226h81M91 326h124M76 412h155" stroke="#6c9b96" stroke-width="12"/><path d="M88 116q4-56 54-62h22q56 6 58 62l-8 83q-60 25-119 0Z" fill="#b7d3c6" stroke="#618e90" stroke-width="9"/><ellipse cx="154" cy="116" rx="67" ry="18" fill="#e3e6ce" stroke="#618e90" stroke-width="9"/><path d="M117 156h75" stroke="#79a7a2" stroke-width="10"/></g>
+      <g transform="translate(1090 270)"><path d="M72 440q55-184 20-370h172q-39 194 17 370Z" fill="#c3d2bc" stroke="#789c96" stroke-width="9"/><ellipse cx="178" cy="70" rx="86" ry="23" fill="#edf0d3" stroke="#789c96" stroke-width="9"/><ellipse cx="178" cy="69" rx="61" ry="13" fill="#83aba5"/><path d="M100 322h156M100 269h149" stroke="#98b9ae" stroke-width="7"/></g>
+      <g transform="translate(333 360)"><path d="M0 314V88h55v226M13 88V20h29v68" fill="#d7c29f" stroke="#987e71" stroke-width="7"/><path d="M0 187h54" stroke="#e7a16f" stroke-width="18"/><path d="M64 314V124h65v190" fill="#efdbb8" stroke="#a89680" stroke-width="7"/><path d="M72 176h47M72 232h47" stroke="#8dbab1" stroke-width="16"/></g>
+      <g transform="translate(1029 390)"><path d="M0 284V72h67v212" fill="#d9b89d" stroke="#9e8f7a" stroke-width="7"/><path d="M2 128h62M2 201h62" stroke="#f0d5a9" stroke-width="19"/></g>
+      <path d="M420 714V561l97-55 106 52 113-41 132 54v143Z" fill="#f6dfb2" stroke="#9d987b" stroke-width="10"/><path d="M420 714V561l97-55 106 52 113-41 132 54v143Z" fill="url(#brick)"/><path d="M401 567 517 497l107 52 112-43 149 61" fill="none" stroke="#b67f67" stroke-width="19"/><path d="M466 622h65v70h-65Zm132 0h65v70h-65Zm131 0h65v70h-65Z" fill="#94c9bd" stroke="#fff1c9" stroke-width="8"/>
+      <path d="M519 558v-42h45v42M763 558v-42h45v42" fill="#d2a87e" stroke="#927e6b" stroke-width="6"/>
+    </g>
+    <g fill="#477f75" opacity=".7"><circle cx="35" cy="748" r="36"/><circle cx="304" cy="737" r="42"/><circle cx="976" cy="750" r="48"/><circle cx="1405" cy="765" r="70"/></g>
+  </svg>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 48 48"><path d="M8 24c3-9 11-15 19-13 11 2 15 14 11 23-5 10-16 9-22 5C9 35 6 30 8 24Z" fill="#e86750" stroke="#ba4e39" stroke-width="2"/><path d="M23 13c2-7 6-9 9-9" fill="none" stroke="#5d914f" stroke-width="4" stroke-linecap="round"/><path d="M24 14c-5-7-11-6-14-2 5 4 9 5 14 2Z" fill="#72b36a"/><circle cx="18" cy="26" r="2" fill="#fff"/><circle cx="30" cy="26" r="2" fill="#fff"/><path d="M20 32q4 4 8 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div><div><strong>元宝切切切工厂</strong><small>YUANBAO · HAPPY FACTORY</small></div></div>
+    <div class="hud"><div class="pill" aria-label="切开的蔬果数量"><span class="icon">🥕</span><span class="label">已经切开</span><b id="score">0</b></div><button class="mini" id="musicBtn" title="音乐开关" aria-label="音乐开关">♫</button><button class="mini" id="pickBtn" title="导入自己的音乐" aria-label="导入自己的音乐">♫+</button><button class="mini" id="soundBtn" title="音效开关" aria-label="音效开关">🔊</button><button class="mini" id="fullBtn" title="全屏" aria-label="全屏">⛶</button></div>
+  </header>
+  <main id="arena" aria-label="蔬果切切切游戏区"><video id="camera" autoplay muted playsinline></video><canvas id="fx"></canvas><div class="corner">🍎 蔬果加工区</div><div class="corner right">✦ 手指划过才切开 ✦</div><div id="cameraHint">准备出发！</div><div id="burstWord">切切切！</div><div id="loading" role="status"><div class="spin"></div>正在准备手势识别…<small>准备好之后蔬果才会出现</small></div></main>
+  <div class="belt"><div class="wagon-meter" id="wagonMeter" aria-live="polite">📦 装车 0/12</div><div class="rail"></div><div class="dark"></div><div class="rollers"></div><div class="base"></div></div>
+  <canvas id="cargo" aria-hidden="true"></canvas>
+  <div id="convoy" aria-hidden="true"><svg viewBox="0 0 900 180" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="460" cy="167" rx="430" ry="7" fill="#315d5e" opacity=".30"/>
+    <g stroke="#3b6e6d" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M19 118 38 91h50V67h55V52h76v67h20v27H17Z" fill="#71b8ae"/>
+      <path d="M146 63h58v38h-58Z" fill="#d7f0df"/>
+      <path d="M44 117h170" stroke="#ffe1a1" stroke-width="8"/>
+      <path d="M45 82V45h28v38" fill="#deaa73"/>
+      <path d="M18 143h222" stroke="#c88969" stroke-width="10"/>
+      <circle cx="51" cy="151" r="15" fill="#365f5d" stroke="#f7dcab" stroke-width="7"/>
+      <circle cx="163" cy="151" r="17" fill="#365f5d" stroke="#f7dcab" stroke-width="7"/>
+      <circle cx="215" cy="151" r="14" fill="#365f5d" stroke="#f7dcab" stroke-width="7"/>
+      <circle cx="33" cy="100" r="9" fill="#fff3bb" stroke="#e9bc76" stroke-width="3"/>
+      <path d="M239 130h17" stroke="#a37d61" stroke-width="9"/>
+    </g>
+    <g fill="#fff7dd" opacity=".8"><circle cx="61" cy="27" r="13"/><circle cx="81" cy="13" r="10"/><circle cx="96" cy="5" r="7"/></g>
+    <g stroke="#3b6e6d" stroke-linejoin="round" stroke-width="6">
+      <g transform="translate(264 0)"><path d="M0 108h180l-13 39H12Z" fill="#efa56f"/><path d="M13 108V91h154v17" fill="#f7d7a0"/><path d="M0 145h180" stroke="#416f6d" stroke-width="8"/><circle cx="39" cy="152" r="13" fill="#365f5d" stroke="#f7dcab"/><circle cx="143" cy="152" r="13" fill="#365f5d" stroke="#f7dcab"/></g>
+      <g transform="translate(475 0)"><path d="M0 108h180l-13 39H12Z" fill="#e8b66c"/><path d="M13 108V91h154v17" fill="#f4dcac"/><path d="M0 145h180" stroke="#416f6d" stroke-width="8"/><circle cx="39" cy="152" r="13" fill="#365f5d" stroke="#f7dcab"/><circle cx="143" cy="152" r="13" fill="#365f5d" stroke="#f7dcab"/></g>
+      <g transform="translate(686 0)"><path d="M0 108h180l-13 39H12Z" fill="#dfa073"/><path d="M13 108V91h154v17" fill="#f5d8ab"/><path d="M0 145h180" stroke="#416f6d" stroke-width="8"/><circle cx="39" cy="152" r="13" fill="#365f5d" stroke="#f7dcab"/><circle cx="143" cy="152" r="13" fill="#365f5d" stroke="#f7dcab"/></g>
+      <path d="M444 132h31m180 0h31" stroke="#a37d61" stroke-width="9"/>
+    </g>
+    <g stroke="#795c4f" stroke-width="3" stroke-linejoin="round">
+      <circle cx="302" cy="76" r="22" fill="#e87758"/><circle cx="353" cy="69" r="26" fill="#ed9c54"/><circle cx="407" cy="76" r="22" fill="#70b27a"/>
+      <path d="M300 55q9-14 21-8m32-4q11-13 22-4m30 17q8-16 21-10" fill="none" stroke="#598f61" stroke-width="7"/>
+      <path d="M505 78q20-43 39 12Q520 102 505 78Z" fill="#ed9655"/><path d="M542 80q19-43 37 12Q556 102 542 80Z" fill="#f2a356"/>
+      <circle cx="609" cy="75" r="23" fill="#eca458"/><path d="M602 53q8-13 21-8" fill="none" stroke="#5f9562" stroke-width="7"/>
+      <circle cx="716" cy="74" r="20" fill="#72b678"/><circle cx="741" cy="61" r="23" fill="#6bac76"/><circle cx="762" cy="77" r="20" fill="#72b678"/>
+      <path d="M790 77q-9-28 12-28 24 0 30 26-5 26-23 29-18-7-19-27Z" fill="#906db1"/><path d="M810 49q-6-13 5-21" fill="none" stroke="#6eaa78" stroke-width="7"/>
+      <circle cx="847" cy="81" r="18" fill="#eb755e"/>
+    </g>
+    <g fill="#fff8e3" opacity=".54"><ellipse cx="295" cy="67" rx="7" ry="4"/><ellipse cx="348" cy="58" rx="8" ry="5"/><ellipse cx="607" cy="67" rx="7" ry="4"/><ellipse cx="847" cy="73" rx="5" ry="3"/></g>
+  </svg></div>
+  <footer class="bottomline"><div class="instruction">伸出手指，划过蔬菜水果才会切开！<small>一个人或和家人一起玩 · 也可以用鼠标或手指划过</small></div><div class="status" id="status">等待开工</div></footer>
+  <div id="overlay"><div class="welcome"><div class="copy"><span class="eyebrow">✦ 元宝的快乐小工厂 ✦</span><h1>今天也来<br><em>切切切！</em></h1><p class="intro">用手指划过蔬果，让它们掉上传送带。装满一车，蔬果小火车就会满载出发！</p><div class="steps"><span>① 允许摄像头</span><span>② 伸出手指</span><span>③ 划过蔬果</span></div><button class="primary" id="startBtn">📷 开启摄像头，开工！</button><button class="secondary" id="pointerBtn">先用鼠标 / 手指玩</button><button class="secondary" id="folderBtn">🎵 选一个音乐文件夹（可选）</button><div class="privacy">摄像头画面只在浏览器中处理，不会上传。首次使用摄像头玩法需要联网加载手部识别组件。</div></div><div class="poster"><svg viewBox="0 0 360 520" aria-hidden="true"><circle cx="175" cy="169" r="136" fill="#fff6d7" opacity=".7"/><path d="M16 390h328v25H16z" fill="#608e80"/><path d="M24 418h314v34H24z" fill="#9f7459"/><path d="M30 451h305v14H30z" fill="#628e81"/><g transform="translate(45 235) rotate(-13)"><path d="M0 46q-12-42 21-50 27-8 35 19 24-34 51-10 25 24 1 69-22 38-52 43Q16 105 0 46Z" fill="#ea7154" stroke="#be5b44" stroke-width="7"/><path d="M53 9Q52-9 66-23" fill="none" stroke="#5c9362" stroke-width="8"/><path d="M55 1q-25-24-39-6 18 16 39 6Z" fill="#78b674"/><ellipse cx="25" cy="35" rx="14" ry="6" transform="rotate(-35 25 35)" fill="#fff" opacity=".5"/></g><g transform="translate(164 212) rotate(10)"><path d="M46 16q50-15 55 23 4 30-55 116Q-10 62 0 33q8-20 46-17Z" fill="#ee974f" stroke="#bf7047" stroke-width="7"/><path d="M40 20Q28-12 10-6M49 20Q52-18 70-8M60 20Q83-8 92 3" fill="none" stroke="#6caa72" stroke-width="14" stroke-linecap="round"/><path d="m26 67 18 5m-10 23 17 5" stroke="#f7bc71" stroke-width="6" stroke-linecap="round"/></g><g transform="translate(242 271) rotate(11)"><path d="M0 38Q-7 4 32 0q43-4 41 37 0 31-37 58Q0 67 0 38Z" fill="#8e72b2" stroke="#665487" stroke-width="7"/><path d="M34 7q-11-25-2-30" fill="none" stroke="#5e956a" stroke-width="8"/><path d="M12 7Q-1-12 24-15q16 7 10 23" fill="#67a878"/></g><g fill="#fff" stroke="#f1aa5b" stroke-width="4"><path d="m82 134 8-22 7 22 22 8-22 8-7 21-8-21-22-8Z"/><path d="m287 165 6-17 6 17 18 6-18 6-6 17-6-17-18-6Z"/></g><path d="M36 472h286" stroke="#fff3d5" stroke-width="7" stroke-dasharray="20 14"/></svg></div></div></div>
+  <div id="toast" role="status"></div>
+  <input id="musicFile" type="file" accept="audio/*" multiple>
+  <input id="folderFile" type="file" webkitdirectory directory multiple>
+</div>
+<script>
+(()=>{'use strict';
+  // A single HTML file; the camera mode downloads MediaPipe hand recognition on demand.
+  const $=s=>document.querySelector(s), app=$('#app'), arena=$('#arena'), belt=$('.belt'), video=$('#camera'), canvas=$('#fx'), ctx=canvas.getContext('2d'), cargoCanvas=$('#cargo'), cargoCtx=cargoCanvas.getContext('2d');
+  const scoreEl=$('#score'), statusEl=$('#status'), hintEl=$('#cameraHint'), wordEl=$('#burstWord'), overlay=$('#overlay'), convoyEl=$('#convoy'), meterEl=$('#wagonMeter');
+  const CONF={maxFruit:18,spawnEvery:640,handFrameMs:70,minSwipePx:9,maxSwipePx:340,loadTarget:12};
+  const types=['apple','carrot','tomato','watermelon','eggplant','broccoli','orange','pumpkin','strawberry','pepper'];
+  const colors={apple:['#e76d56','#ffde9c'],carrot:['#f3964e','#ffe6ac'],tomato:['#e95d50','#ffcf9c'],watermelon:['#68ad76','#ec7990'],eggplant:['#8867ae','#d7a3d6'],broccoli:['#70b275','#d4e6ad'],orange:['#eeac55','#ffe5a3'],pumpkin:['#e99654','#ffe0a4'],strawberry:['#e96968','#ffccad'],pepper:['#e7b950','#fff0aa']};
+  let w=0,h=0,appW=0,appH=0,dpr=1,running=false,gameReady=false,hasCamera=false,score=0,combo=0,comboAt=0,fruit=[],cargo=[],bits=[],texts=[],rings=[],lastFrame=0,lastSpawn=0,stream=null,hands=null,handsTimer=null,handsBusy=false,trackedHands=[],fingerTips=[],trails=[],pointerTracks=new Map();
+  let fruitSerial=0,arrivals=new Map(),loadCount=0,trainQueue=0,trainActive=false,trainX=0,trainPauseUntil=0;
+  let audioCtx=null,musicOn=true,soundOn=true,musicTimer=null,musicStep=0,customTracks=[],trackIndex=0,currentAudio=null,toTimer=0;
+  const rand=(a,b)=>a+Math.random()*(b-a),clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+  function resize(){
+    const oldW=w,oldH=h,oldAppW=appW,oldAppH=appH;
+    let r=arena.getBoundingClientRect(),a=app.getBoundingClientRect();
+    w=r.width;h=r.height;appW=a.width;appH=a.height;dpr=Math.min(devicePixelRatio||1,2);
+    if(oldW&&oldH&&(oldW!==w||oldH!==h)){
+      for(const f of fruit){f.x=clamp(f.x*w/oldW,f.size*.48,w-f.size*.48);f.y=clamp(f.y*h/oldH,f.size*.48,h-f.size*.48)}
+      for(const p of cargo){p.x*=appW/oldAppW;p.y*=appH/oldAppH}
+      if(trainActive)trainX*=appW/oldAppW;
+      bits=[];texts=[];rings=[];trails=[];trackedHands=[];fingerTips=[];
+    }
+    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+    canvas.style.width=w+'px';canvas.style.height=h+'px';ctx.setTransform(dpr,0,0,dpr,0,0);
+    cargoCanvas.width=Math.round(appW*dpr);cargoCanvas.height=Math.round(appH*dpr);
+    cargoCtx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  addEventListener('resize',resize);resize();
+  function toast(s){const t=$('#toast');t.textContent=s;t.classList.add('show');clearTimeout(toTimer);toTimer=setTimeout(()=>t.classList.remove('show'),3500)}
+  function state(s){statusEl.textContent=s}
+  function startAudio(){try{audioCtx??=new(window.AudioContext||window.webkitAudioContext)();audioCtx.resume()}catch(e){}}
+  function tone(freq,dur=.13,vol=.06,type='sine',delay=0){if(!audioCtx||!soundOn)return;const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(freq*.62,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+dur+.01)}
+  function sliceSound(count){tone(380+Math.random()*180,.12,.07,'triangle');tone(690+Math.random()*220,.17,.035,'sine',.055);if(count>=3)tone(950,.19,.035,'sine',.12)}
+  function trainHorn(){tone(294,.28,.055,'triangle');tone(392,.36,.05,'triangle',.16)}
+  function musicTick(){if(!musicOn||!running||customTracks.length)return;const notes=[392,0,523,0,587,523,440,0,392,0,330,392,440,0,523,0],n=notes[musicStep%notes.length];if(n&&audioCtx){const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.value=n;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.014,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.15);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+.17)}musicStep++}
+  function manageMusic(){clearInterval(musicTimer);if(currentAudio){currentAudio.pause();currentAudio=null}if(!running||!musicOn)return;if(customTracks.length){const f=customTracks[trackIndex%customTracks.length],url=URL.createObjectURL(f),a=new Audio(url);a.volume=.45;currentAudio=a;a.onended=()=>{URL.revokeObjectURL(url);trackIndex++;manageMusic()};a.play().catch(()=>toast('点一下音乐按钮，就能播放自己选择的歌曲'));return}musicTimer=setInterval(musicTick,240)}
+  $('#musicBtn').onclick=()=>{startAudio();musicOn=!musicOn;$('#musicBtn').textContent=musicOn?'♫':'♪̸';$('#musicBtn').style.opacity=musicOn?'1':'.55';manageMusic();toast(musicOn?'音乐打开啦':'音乐已关闭')};
+  $('#soundBtn').onclick=()=>{soundOn=!soundOn;$('#soundBtn').textContent=soundOn?'🔊':'🔇';toast(soundOn?'切切切音效打开啦':'音效已关闭')};
+  $('#fullBtn').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.().catch(()=>{});else document.exitFullscreen?.()};
+  // Optional local music stays local; the browser asks the user to choose files.
+  $('#pickBtn').onclick=()=>$('#musicFile').click();
+  $('#folderBtn').onclick=()=>$('#folderFile').click();
+  addEventListener('keydown',e=>{if(e.key.toLowerCase()==='m'&&running)$('#musicFile').click()});
+  $('#musicFile').onchange=e=>{customTracks=[...e.target.files].filter(f=>f.type.startsWith('audio/')||/\.(mp3|wav|ogg|m4a)$/i.test(f.name));trackIndex=0;if(customTracks.length){musicOn=true;$('#musicBtn').textContent='♫';manageMusic();toast('已加入 '+customTracks.length+' 首音乐')}};
+  $('#folderFile').onchange=e=>{customTracks=[...e.target.files].filter(f=>f.type.startsWith('audio/')||/\.(mp3|wav|ogg|m4a)$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));trackIndex=0;if(customTracks.length){musicOn=true;manageMusic();toast('已加入 '+customTracks.length+' 首音乐，开工吧！')}else toast('这个文件夹里没有找到音乐文件')};
+  function pathRound(c,x,y,ww,hh,rad){c.beginPath();c.roundRect(x,y,ww,hh,rad)}
+  function makeSprite(type){let c=document.createElement('canvas');c.width=c.height=160;let p=c.getContext('2d');p.translate(80,80);p.lineJoin='round';p.lineCap='round';let [base]=colors[type],outline='#775d4e';p.fillStyle=base;p.strokeStyle=outline;p.lineWidth=4;
+    const ellipse=(x,y,rx,ry,rot=0)=>{p.beginPath();p.ellipse(x,y,rx,ry,rot,0,Math.PI*2);p.fill();p.stroke()};
+    const leaf=(x,y,rot=0)=>{p.save();p.translate(x,y);p.rotate(rot);p.fillStyle='#73b678';p.strokeStyle='#547f57';p.lineWidth=3;p.beginPath();p.moveTo(0,0);p.quadraticCurveTo(-17,-21,-30,-9);p.quadraticCurveTo(-19,8,0,0);p.fill();p.stroke();p.restore()};
+    if(type==='carrot'){p.beginPath();p.moveTo(-29,-44);p.quadraticCurveTo(2,-53,34,-39);p.quadraticCurveTo(28,11,0,64);p.quadraticCurveTo(-34,13,-29,-44);p.fill();p.stroke();p.strokeStyle='#6da66d';p.lineWidth=10;for(let i=-1;i<=1;i++){p.beginPath();p.moveTo(0,-44);p.quadraticCurveTo(i*25,-70,i*24,-64);p.stroke()}p.strokeStyle='#d7723e';p.lineWidth=3;for(let y=-12;y<33;y+=19){p.beginPath();p.moveTo(-17,y);p.lineTo(-7,y+2);p.stroke()}}
+    else if(type==='eggplant'){p.save();p.rotate(-.38);ellipse(0,10,36,54);p.fillStyle='#7eb977';p.beginPath();p.moveTo(-35,-31);p.quadraticCurveTo(-16,-65,2,-43);p.quadraticCurveTo(18,-69,36,-31);p.quadraticCurveTo(5,-40,-35,-31);p.fill();p.stroke();p.strokeStyle='#5b8d5c';p.lineWidth=7;p.beginPath();p.moveTo(0,-44);p.lineTo(6,-64);p.stroke();p.restore()}
+    else if(type==='broccoli'){p.fillStyle='#9ac777';pathRound(p,-16,-4,32,61,8);p.fill();p.stroke();p.fillStyle='#68a879';for(const [x,y,r] of [[-31,-15,24],[-14,-36,27],[11,-40,28],[31,-17,24],[-2,-12,30]]){p.beginPath();p.arc(x,y,r,0,7);p.fill();p.stroke()}}
+    else if(type==='strawberry'){p.beginPath();p.moveTo(-44,-24);p.bezierCurveTo(-50,10,-12,54,0,62);p.bezierCurveTo(14,52,50,9,44,-24);p.quadraticCurveTo(0,-56,-44,-24);p.fill();p.stroke();p.fillStyle='#ffe9ba';for(let i=0;i<11;i++){const a=i*2.399,r=13+14*(i%3);p.beginPath();p.ellipse(Math.cos(a)*r,Math.sin(a)*r+5,2,4,.3,0,7);p.fill()}for(let i=-2;i<=2;i++)leaf(i*9,-37,i*.35+Math.PI/2)}
+    else if(type==='pepper'){ellipse(0,5,49,48);p.strokeStyle='#9e804d';p.lineWidth=3;for(let x of [-20,20]){p.beginPath();p.moveTo(x,-32);p.quadraticCurveTo(x*.8,9,x,42);p.stroke()}p.strokeStyle='#5c9360';p.lineWidth=8;p.beginPath();p.moveTo(0,-38);p.quadraticCurveTo(7,-62,15,-54);p.stroke();leaf(-3,-37,-1.2)}
+    else if(type==='watermelon'){ellipse(0,3,51,51);p.strokeStyle='#467e5e';p.lineWidth=7;for(let x of [-27,-7,16,35]){p.beginPath();p.moveTo(x,-44);p.quadraticCurveTo(x+12,0,x,47);p.stroke()}p.strokeStyle='#775d4e';p.lineWidth=3}
+    else if(type==='pumpkin'){ellipse(0,7,53,43);p.strokeStyle='#c17948';p.lineWidth=4;for(let x of [-24,0,24]){p.beginPath();p.ellipse(x,7,19,42,0,0,7);p.stroke()}p.fillStyle='#65a36a';p.fillRect(-5,-46,10,17);leaf(-2,-42,-.5)}
+    else if(type==='tomato'){ellipse(0,5,49,46);for(let i=0;i<5;i++)leaf(Math.cos(i*1.26)*10,-38+Math.sin(i*1.26)*4,i*1.26+1)}
+    else if(type==='orange'){ellipse(0,4,49,49);leaf(5,-41,-.3);p.fillStyle='#b98342';p.beginPath();p.arc(0,-43,4,0,7);p.fill()}
+    else{p.beginPath();p.moveTo(0,-33);p.bezierCurveTo(-53,-64,-63,-8,-43,36);p.bezierCurveTo(-25,70,-3,50,0,53);p.bezierCurveTo(11,61,39,64,53,24);p.bezierCurveTo(69,-28,40,-59,0,-33);p.fill();p.stroke();p.strokeStyle='#668d59';p.lineWidth=6;p.beginPath();p.moveTo(0,-34);p.quadraticCurveTo(2,-55,16,-58);p.stroke();leaf(0,-37,-.4)}
+    p.fillStyle='#ffffff99';p.beginPath();p.ellipse(-22,-17,10,19,-.6,0,7);p.fill();
+    // Small face; recognizable even when the fruit is moving quickly.
+    if(type!=='broccoli'&&type!=='carrot'){p.fillStyle='#493e3f';p.beginPath();p.arc(-14,14,3,0,7);p.arc(14,14,3,0,7);p.fill();p.strokeStyle='#493e3f';p.lineWidth=2;p.beginPath();p.arc(0,18,5,0,Math.PI);p.stroke()}
+    return c}
+  const sprites=Object.fromEntries(types.map(t=>[t,makeSprite(t)]));
+  function spawn(){if(fruit.length>=(w<520?8:CONF.maxFruit))return;let t=types[Math.floor(Math.random()*types.length)],size=2*clamp(Math.min(w,h)*rand(.115,.16),60,110),x=rand(size*.48,w-size*.48),y=rand(size*.48,h-size*.48);fruit.push({t,x,y,size,vx:rand(-14,14),vy:rand(-19,8),rot:rand(-.25,.25),vr:rand(-.28,.28),age:0,bob:rand(0,7),cut:false})}
+  function preparePlay(){if(gameReady)return;gameReady=true;arena.classList.remove('loading');for(let i=0;i<(w<520?5:9);i++)spawn();lastSpawn=performance.now()}
+  function particles(x,y,t,n=15){let cs=colors[t];for(let i=0;i<n;i++){let a=rand(0,7),s=rand(75,260);bits.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-90,life:rand(.35,.75),max:.75,r:rand(3,8),c:i%3===0?'#fff4be':cs[i%2],shape:i%5===0})}if(bits.length>400)bits.splice(0,bits.length-400)}
+  function createCargo(f){
+    const ar=arena.getBoundingClientRect(),root=app.getBoundingClientRect();
+    const deliveryId=++fruitSerial;
+    for(const side of [-1,1])cargo.push({
+      t:f.t,side,deliveryId,size:f.size,x:ar.left-root.left+f.x+side*f.size*.07,
+      y:ar.top-root.top+f.y,vx:side*rand(65,105),vy:rand(-190,-120),
+      angle:f.rot,spin:side*rand(2.1,3.3),landed:false,age:0
+    });
+    if(cargo.length>120)cargo.splice(0,cargo.length-120);
+  }
+  function distanceToSegment(px,py,ax,ay,bx,by){
+    const dx=bx-ax,dy=by-ay,t=clamp(((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy),0,1);
+    return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+  }
+  function cutSegment(a,b){
+    if(!running||!gameReady||!a||!b)return 0;
+    const travel=Math.hypot(b.x-a.x,b.y-a.y);
+    if(travel<CONF.minSwipePx||travel>CONF.maxSwipePx)return 0;
+    trails.push({ax:a.x,ay:a.y,bx:b.x,by:b.y,life:.24});
+    if(trails.length>40)trails.shift();
+    let count=0;
+    for(const f of fruit){
+      if(f.cut)continue;
+      if(distanceToSegment(f.x,f.y,a.x,a.y,b.x,b.y)<f.size*.40){
+        f.cut=true;createCargo(f);particles(f.x,f.y,f.t,15);count++;
+      }
+    }
+    if(count){
+      let now=performance.now();combo=now-comboAt<2400?combo+count:count;comboAt=now;
+      score+=count;scoreEl.textContent=score;
+      rings.push({x:b.x,y:b.y,age:0,r:Math.min(95,45+count*15)});
+      texts.push({x:b.x,y:b.y-20,life:1,text:'+'+count*10});sliceSound(count);
+      wordEl.textContent=count>=4?'哇！切切切！':combo>=8?'太棒啦！':'切切切！';
+      wordEl.classList.remove('pop');void wordEl.offsetWidth;wordEl.classList.add('pop');
+      state('切开 '+score+' 个 · 送上传送带！');hintEl.style.opacity='0';
+    }
+    return count;
+  }
+  function drawSprite(f){let s=f.size;ctx.save();ctx.translate(f.x,f.y+Math.sin(f.age*2+f.bob)*4);ctx.rotate(f.rot);ctx.shadowColor='#204d4680';ctx.shadowBlur=10;ctx.shadowOffsetY=9;ctx.drawImage(sprites[f.t],-s/2,-s/2,s,s);ctx.restore()}
+  function drawCargoPiece(p,beltY){
+    const c=cargoCtx,s=p.size;
+    if(p.landed){c.save();c.fillStyle='#244e4b55';c.beginPath();c.ellipse(p.x,beltY+5,s*.28,6,0,0,7);c.fill();c.restore()}
+    c.save();c.translate(p.x,p.y);c.rotate(p.angle);
+    c.shadowColor='#174d4a66';c.shadowBlur=8;c.shadowOffsetY=5;
+    c.beginPath();if(p.side<0)c.rect(-s/2,-s/2,s/2,s);else c.rect(0,-s/2,s/2,s);
+    c.clip();c.drawImage(sprites[p.t],-s/2,-s/2,s,s);c.restore();
+    c.save();c.translate(p.x,p.y);c.rotate(p.angle);
+    c.fillStyle=colors[p.t][1];c.strokeStyle='#fff9d8';c.lineWidth=2;
+    c.beginPath();c.ellipse(p.side<0?-1:1,0,Math.max(4,s*.045),s*.28,0,0,7);
+    c.fill();c.stroke();c.restore();
+  }
+  function updateMeter(){meterEl.textContent=trainActive?'🚂 满载发车啦！':`📦 装车 ${loadCount}/${CONF.loadTarget}`}
+  function onDelivered(p){
+    const n=(arrivals.get(p.deliveryId)||0)+1;
+    if(n<2){arrivals.set(p.deliveryId,n);return}
+    arrivals.delete(p.deliveryId);loadCount++;
+    if(loadCount>=CONF.loadTarget){loadCount-=CONF.loadTarget;trainQueue++}
+    updateMeter();
+  }
+  function launchTrain(){
+    trainQueue--;trainActive=true;trainX=appW+30;
+    convoyEl.style.visibility='visible';convoyEl.style.transform=`translateX(${trainX}px)`;
+    updateMeter();trainHorn();toast('满载啦！蔬果小火车出发！ 🚂');
+    wordEl.textContent='小火车出发！';wordEl.classList.remove('pop');void wordEl.offsetWidth;wordEl.classList.add('pop');
+    state('蔬果小火车正在运货！');
+  }
+  function renderTrain(dt){
+    if(trainActive){
+      trainX-=Math.max(230,appW/4.8)*dt;
+      convoyEl.style.transform=`translateX(${trainX}px)`;
+      if(trainX<-(convoyEl.getBoundingClientRect().width+35)){
+        trainActive=false;convoyEl.style.visibility='hidden';trainPauseUntil=performance.now()+600;
+        updateMeter();state('小火车运走啦 · 继续装车！');
+      }
+    }else if(trainQueue&&performance.now()>=trainPauseUntil)launchTrain();
+  }
+  function renderCargo(dt){
+    const root=app.getBoundingClientRect(),beltY=belt.getBoundingClientRect().top-root.top+8;
+    for(let i=cargo.length-1;i>=0;i--){
+      const p=cargo[i];p.age+=dt;
+      if(!p.landed){
+        p.vy+=920*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.angle+=p.spin*dt;
+        if(p.vy>0&&p.y+p.size*.36>=beltY){
+          p.landed=true;p.y=beltY-p.size*.36;p.vx=rand(135,190);
+          p.angle=p.side*.12;
+        }
+      }else{
+        p.x+=p.vx*dt;p.y=beltY-p.size*.36+Math.sin(p.age*10)*1.5;
+      }
+      if(p.x>appW+p.size){onDelivered(p);cargo.splice(i,1);continue}
+      if(p.age>45){cargo.splice(i,1);continue}
+      drawCargoPiece(p,beltY);
+    }
+  }
+  function render(now){requestAnimationFrame(render);let dt=Math.min((now-lastFrame)/1000||.016,.05);lastFrame=now;ctx.clearRect(0,0,w,h);cargoCtx.clearRect(0,0,appW,appH);if(!running||!gameReady)return;
+    if(now-lastSpawn>(w<520?900:CONF.spawnEvery)){lastSpawn=now;spawn();if(fruit.length<(w<520?3:5))spawn()}
+    for(let i=fruit.length-1;i>=0;i--){let f=fruit[i];f.age+=dt;if(f.cut){fruit.splice(i,1)}else{f.x+=f.vx*dt;f.y+=f.vy*dt;f.rot+=f.vr*dt;if(f.x<f.size*.45||f.x>w-f.size*.45)f.vx*=-1;if(f.y<f.size*.45||f.y>h-f.size*.45)f.vy*=-1;drawSprite(f)}}
+    for(let i=bits.length-1;i>=0;i--){let p=bits[i];p.life-=dt;if(p.life<=0){bits.splice(i,1);continue}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=430*dt;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.c;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.vx*.004);if(p.shape)ctx.fillRect(-p.r/2,-p.r/2,p.r*1.7,p.r*.65);else{ctx.beginPath();ctx.arc(0,0,p.r,0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
+    for(let i=rings.length-1;i>=0;i--){let p=rings[i];p.age+=dt;ctx.globalAlpha=(1-p.age/.43)*.65;ctx.strokeStyle='#fff0b4';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.35+p.age*1.8),0,7);ctx.stroke();if(p.age>.43)rings.splice(i,1)}ctx.globalAlpha=1;
+    for(let i=texts.length-1;i>=0;i--){let p=texts[i];p.life-=dt;p.y-=38*dt;ctx.globalAlpha=p.life;ctx.font='1000 24px ui-rounded,system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#558b76';ctx.strokeText(p.text,p.x,p.y);ctx.fillStyle='#fff8cf';ctx.fillText(p.text,p.x,p.y);if(p.life<=0)texts.splice(i,1)}ctx.globalAlpha=1;
+    for(let i=trails.length-1;i>=0;i--){let p=trails[i];p.life-=dt;if(p.life<=0){trails.splice(i,1);continue}ctx.save();ctx.globalAlpha=p.life/.24;ctx.lineCap='round';ctx.strokeStyle='#fff6bf';ctx.lineWidth=9;ctx.shadowColor='#ffe493';ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(p.ax,p.ay);ctx.lineTo(p.bx,p.by);ctx.stroke();ctx.lineWidth=3;ctx.strokeStyle='#ffffff';ctx.stroke();ctx.restore()}
+    if(hasCamera){for(const p of fingerTips){ctx.save();ctx.fillStyle='#fff9df';ctx.strokeStyle='#ef9b55';ctx.lineWidth=3;ctx.shadowColor='#ffdd95';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fill();ctx.stroke();ctx.restore()}}
+    renderCargo(dt);
+    renderTrain(dt);
+  }
+  requestAnimationFrame(render);
+  function mapHandPoint(p){
+    const vw=video.videoWidth,vh=video.videoHeight,aspect=w/h,source=vw/vh;
+    let sx=0,sy=0,sw=vw,sh=vh;
+    if(source>aspect){sw=vh*aspect;sx=(vw-sw)/2}
+    else{sh=vw/aspect;sy=(vh-sh)/2}
+    return {x:w*(1-(p.x*vw-sx)/sw),y:h*(p.y*vh-sy)/sh};
+  }
+  function onHandsResults(results){
+    const old=trackedHands,used=new Set(),next=[],tips=[];
+    for(const landmarks of results.multiHandLandmarks||[]){
+      const wrist=landmarks[0];let match=-1,best=.30;
+      for(let j=0;j<old.length;j++){
+        if(used.has(j)||performance.now()-old[j].at>320)continue;
+        const d=Math.hypot(wrist.x-old[j].wrist.x,wrist.y-old[j].wrist.y);
+        if(d<best){best=d;match=j}
+      }
+      if(match>=0)used.add(match);
+      const points={};
+      for(const id of [8,12,16,20]){
+        const p=mapHandPoint(landmarks[id]);points[id]=p;
+        if(p.x>=0&&p.x<=w&&p.y>=0&&p.y<=h)tips.push(p);
+        if(match>=0)cutSegment(old[match].points[id],p);
+      }
+      next.push({wrist:{x:wrist.x,y:wrist.y},points,at:performance.now()});
+    }
+    trackedHands=next;fingerTips=tips;
+    if(tips.length&&hintEl.style.opacity!=='0')hintEl.textContent='看见手指啦，划过蔬果试试！';
+  }
+  function loadHandScript(){
+    if(typeof window.Hands==='function')return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js';
+      script.crossOrigin='anonymous';
+      const timeout=setTimeout(()=>{script.remove();reject(new Error('手部识别组件加载超时'))},16000);
+      script.onload=()=>{clearTimeout(timeout);typeof window.Hands==='function'?resolve():reject(new Error('手部识别组件未启动'))};
+      script.onerror=()=>{clearTimeout(timeout);reject(new Error('手部识别组件下载失败'))};
+      document.head.appendChild(script);
+    });
+  }
+  function stopCamera(){
+    clearInterval(handsTimer);handsTimer=null;hasCamera=false;trackedHands=[];fingerTips=[];
+    stream?.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;
+    arena.classList.remove('has-camera','loading');
+  }
+  async function sendHandFrame(){
+    if(!running||!hasCamera||handsBusy||!video.videoWidth)return;
+    handsBusy=true;
+    try{await hands.send({image:video})}
+    catch(e){console.error('手部识别失败',e);stopCamera();state('鼠标 / 手指模式');hintEl.textContent='手部识别中断，请用鼠标或手指划过';toast('手部识别中断，已切换为鼠标 / 触屏玩法')}
+    finally{handsBusy=false}
+  }
+  const pointerPos=e=>{const r=arena.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+  arena.addEventListener('pointerdown',e=>{if(!running)return;arena.setPointerCapture?.(e.pointerId);pointerTracks.set(e.pointerId,pointerPos(e))});
+  arena.addEventListener('pointermove',e=>{
+    if(!running||!pointerTracks.has(e.pointerId))return;
+    const p=pointerPos(e);cutSegment(pointerTracks.get(e.pointerId),p);pointerTracks.set(e.pointerId,p);
+  });
+  for(const event of ['pointerup','pointercancel','lostpointercapture'])arena.addEventListener(event,e=>pointerTracks.delete(e.pointerId));
+  async function cameraStart(){
+    try{
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('当前浏览器未开放摄像头');
+      const portrait=appW<660&&appH>appW;
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:portrait?480:640},height:{ideal:portrait?640:480},frameRate:{ideal:24,max:30}},audio:false});
+      video.srcObject=stream;await video.play();hasCamera=true;arena.classList.add('has-camera');
+      state('摄像头已开启 · 正在加载手指识别…');hintEl.textContent='正在准备手指识别…';
+      await loadHandScript();
+      hands=new window.Hands({locateFile:file=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+      hands.setOptions({maxNumHands:6,modelComplexity:0,minDetectionConfidence:.55,minTrackingConfidence:.55});
+      hands.onResults(onHandsResults);
+      if(hands.initialize)await hands.initialize();
+      // The first inference also loads any remaining model assets. Keep the playfield empty until it succeeds.
+      await hands.send({image:video});
+      preparePlay();
+      handsTimer=setInterval(sendHandFrame,CONF.handFrameMs);
+      state('手指识别已开启 · 划过蔬果！');hintEl.textContent='把手伸进画面，用手指划过蔬果';
+      toast('手指识别准备好了，划过蔬果才会切开！');
+    }catch(e){
+      console.error(e);stopCamera();state('鼠标 / 手指模式');
+      preparePlay();
+      hintEl.textContent='用鼠标或手指划过蔬果';
+      toast(e?.name==='NotAllowedError'?'摄像头未获许可，已切换为鼠标玩法':'手指识别不可用，已切换为鼠标玩法');
+    }
+  }
+  async function start(withCamera){
+    if(running)return;running=true;overlay.classList.add('hidden');startAudio();
+    manageMusic();state('开工啦！');
+    hintEl.textContent='用手指划过蔬果！';
+    if(withCamera){arena.classList.add('loading');await cameraStart()}
+    else{preparePlay();state('鼠标 / 手指模式');hintEl.textContent='按住鼠标或手指划过蔬果'}
+  }
+  $('#startBtn').onclick=()=>start(true);$('#pointerBtn').onclick=()=>start(false);
+  addEventListener('pagehide',()=>{stopCamera();hands?.close?.();if(currentAudio)currentAudio.pause()});
+})();
+</script>
+</body>
+</html>
